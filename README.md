@@ -21,3 +21,4 @@ Run the docker contain by running
 
 Stop the docker container by running
 - `docker-compose down`
+
