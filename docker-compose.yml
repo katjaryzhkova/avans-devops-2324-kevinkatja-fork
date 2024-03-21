@@ -35,3 +35,39 @@ services:
       - "25672:25672"
       - "15671:15671"
       - "15672:15672"
+  db-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: db-exporter
+    environment:
+      - MONGO_URL=mongodb://root:password@mongodb:27017/
+    ports:
+      - "9216:9216"
+      - "17001:17001"
+    depends_on:
+      - mongodb
+    command: --mongodb.uri=$MONGO_URL
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
+  grafana:
+    build: ./grafana
+    ports:
+      - "5000:3000"
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    container_name: alertmgr
+    ports:
+      - "9093:9093"
+    volumes:
+      - "./alertmanager:/config"
+      - alertmanager-data:/data
+    command: --config.file=/config/alertmanager.yml --log.level=debug
+volumes:
+  prometheus-data:
+  alertmanager-data:

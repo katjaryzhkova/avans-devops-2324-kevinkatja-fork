@@ -1,0 +1,11 @@
+groups: 
+  - name: DemoAlerts
+    rules: 
+      - alert: "On api down"
+        expr: up { job = "api" } < 1
+        for: 30s
+        labels: 
+          severity: critical
+        annotations:
+          summary: "Api is down"
+          description: "The api has gone offline"
