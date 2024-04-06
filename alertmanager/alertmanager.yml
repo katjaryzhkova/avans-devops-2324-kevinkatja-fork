@@ -8,9 +8,10 @@ receivers:
   - name: 'Mail Alert'
     email_configs:
       - smarthost: 'smtp.gmail.com:587'
-        auth_username: 'email'
-        auth_password: 'password'
-        from: 'email'
-        to: 'email'
+        auth_username: "$EMAIL_USERNAME"
+        auth_identity: "$EMAIL_USERNAME"
+        auth_password: "$EMAIL_PASSWORD"
+        from: $EMAIL_USERNAME
+        to: $EMAIL_USERNAME
         headers:
           subject: 'Prometheus Mail Alerts'

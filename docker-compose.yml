@@ -45,7 +45,7 @@ services:
       - "17001:17001"
     depends_on:
       - mongodb
-    command: --mongodb.uri=$MONGO_URL
+    command: --mongodb.uri=mongodb://root:password@mongodb:27017/
   prometheus:
     image: prom/prometheus:latest
     volumes:
@@ -67,6 +67,9 @@ services:
     volumes:
       - "./alertmanager:/config"
       - alertmanager-data:/data
+    environment:
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
     command: --config.file=/config/alertmanager.yml --log.level=debug
 volumes:
   prometheus-data:
