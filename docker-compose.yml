@@ -80,6 +80,7 @@ services:
   prometheus:
     build:
       context: ./prometheus
+      dockerfile: dockerfile
       args:
         - APP_PORT=${APP_PORT}
         - CHAT_PORT=${CHAT_PORT}
@@ -89,7 +90,9 @@ services:
       - "9090:9090"
     command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
   grafana:
-    build: ./grafana
+    build:
+      context: ./grafana
+      dockerfile: dockerfile
     ports:
       - "5000:3000"
   alertmanager:

@@ -1,8 +1,28 @@
 kind: Environment
-name: preview
+name: devops
 type: primary
-urlHandle: 92ffli
 components:
+    -
+        kind: Service
+        name: alertmanager
+        dockerCompose:
+            command:
+                - '--config.file=/config/alertmanager.yml'
+                - '--log.level=debug'
+            image: 'prom/alertmanager:latest'
+            ports:
+                - '9093:9093'
+            restart: unless-stopped
+        hosts:
+            -
+                hostname: 'alertmanager-{{ env.base_domain }}'
+                path: /
+                servicePort: 9093
+        volumes:
+            -
+                name: alertmanager-data
+                mount: /data
+                subPath: ''
     -
         kind: Application
         name: app
@@ -12,7 +32,7 @@ components:
         dockerCompose:
             build:
                 context: .
-                dockerfile: dockerfile.prod
+                dockerfile: dockerfile
             environment:
                 MONGO_URL: 'mongodb://root:password@mongodb:27017/'
             ports:
@@ -22,6 +42,55 @@ components:
                 hostname: 'app-{{ env.base_domain }}'
                 path: /
                 servicePort: 3000
+    -
+        kind: Database
+        name: db-exporter
+        dockerCompose:
+            command:
+                - '--mongodb.uri='
+            environment:
+                MONGO_URL: 'mongodb://root:password@mongodb:27017/'
+            image: 'bitnami/mongodb-exporter:latest'
+            ports:
+                - '9216:9216'
+                - '17001:17001'
+    -
+        kind: Application
+        name: grafana
+        gitRepo: 'https://github.com/katjaryzhkova/avans-devops-2324-kevinkatja-fork.git'
+        gitBranch: main
+        gitApplicationPath: grafana
+        dockerCompose:
+            build:
+                context: ./grafana
+                dockerfile: Dockerfile
+            ports:
+                - '5000:3000'
+        hosts:
+            -
+                hostname: 'grafana-{{ env.base_domain }}'
+                path: /
+                servicePort: 5000
+    -
+        kind: Service
+        name: messagebus
+        dockerCompose:
+            hostname: messagebus
+            image: 'rabbitmq:latest'
+            labels:
+                NAME: messagebus
+            ports:
+                - '4369:4369'
+                - '5671:5671'
+                - '5672:5672'
+                - '25672:25672'
+                - '15671:15671'
+                - '15672:15672'
+        hosts:
+            -
+                hostname: 'messagebus-{{ env.base_domain }}'
+                path: /
+                servicePort: 4369
     -
         kind: Database
         name: mongodb
@@ -35,3 +104,32 @@ components:
             restart: always
             ports:
                 - '27017:27017'
+    -
+        kind: Service
+        name: prometheus
+        dockerCompose:
+            command:
+                - '--web.enable-lifecycle'
+                - '--config.file=/etc/prometheus/prometheus.yml'
+            image: 'prom/prometheus:latest'
+            ports:
+                - '9090:9090'
+        hosts:
+            -
+                hostname: 'prometheus-{{ env.base_domain }}'
+                path: /
+                servicePort: 9090
+        volumes:
+            -
+                name: prometheus-data
+                mount: /prometheus
+                subPath: ''
+volumes:
+    -
+        name: alertmanager-data
+        size: 1Gi
+        type: disk
+    -
+        name: prometheus-data
+        size: 1Gi
+        type: disk

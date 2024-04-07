@@ -44,7 +44,7 @@ class Request {
         }
 
         let response = false
-        while (!(response = await this.resChannel.get(this.resQueueName))) { }
+        while (!(response = await this.resChannel.get(this.resQueueName))) { /* empty */ }
 
         return JSON.parse(response.content.toString())
     }

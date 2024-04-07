@@ -25,7 +25,7 @@ io.on("connection", function(socket) {
             name
         });
 
-        user_id = (await request.response()).id;
+        user_id = (await request.response()).insertedId;
 
         user_name = name;
     });

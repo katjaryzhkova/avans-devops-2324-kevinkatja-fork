@@ -23,8 +23,8 @@ const worker = async () => {
 };
 
 const do_worker = async () => {
-    // Wait 15 seconds before starting worker to ensure message bus is ready
-    setTimeout(worker, 15000);
+    // Wait 30 seconds before starting worker to ensure message bus is ready
+    setTimeout(worker, 30000);
 }
 
 module.exports = do_worker
