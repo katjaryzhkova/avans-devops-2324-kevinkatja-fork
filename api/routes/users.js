@@ -15,8 +15,4 @@ router.post('/', function(req, res) {
     .catch(err => res.status(500).json(err));
 });
 
-router.get('/:user_id', async function(req, res) {
-  res.json(await db.collection('users').findById(req.params.user_id));
-});
-
 module.exports = router;
