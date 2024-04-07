@@ -1,0 +1,15 @@
+# Build from latest prometheus image
+FROM prom/prometheus:latest
+
+# Copy config files
+ADD ./conf /etc/prometheus
+
+# Default app port is 3000
+ARG APP_PORT=3000
+
+# Default chat port is 3030
+ARG CHAT_PORT=3030
+
+# Parse env variables in config since prometheus cannot do this natively
+RUN sed -i -e "s/APP_PORT/${APP_PORT}/" /etc/prometheus/prometheus.yml
+RUN sed -i -e "s/CHAT_PORT/${CHAT_PORT}/" /etc/prometheus/prometheus.yml

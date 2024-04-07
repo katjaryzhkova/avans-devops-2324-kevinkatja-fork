@@ -6,22 +6,55 @@ services:
     command: --auth
     restart: always
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_ROOT_USERNAME=adminuser1
+      - MONGO_INITDB_ROOT_PASSWORD=p4ssword!
+      - DB_NAME=${DB_NAME}
     volumes:
-      - ./data:/data/db
+      - ./data:/data/d
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     expose:
       - 27017
-  app: 
-    build: 
-      context: .
+  app:
+    build:
+      context: api
       dockerfile: dockerfile
+      args:
+        - APP_PORT=${APP_PORT}
     ports:
-      - '3000:3000'
+      - '3000:${APP_PORT}'
     environment:
-      - MONGO_URL=mongodb://root:password@mongodb:27017/
+      - MONGO_URL=mongodb://adminuser1:p4ssword!@mongodb:27017/
+      - PORT=${APP_PORT}
+      - DB_NAME=${DB_NAME}
     depends_on:
       - mongodb
+  chatmongodb:
+    image: mongo
+    container_name: chatmongodb
+    command: --auth
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=adminuser1
+      - MONGO_INITDB_ROOT_PASSWORD=p4ssword!
+    volumes:
+      - ./chat_data:/data/
+    expose:
+      - 27017
+  chat:
+    build:
+      context: chat
+      dockerfile: dockerfile
+      args:
+        - CHAT_PORT=${CHAT_PORT}
+    ports:
+      - '3030:${CHAT_PORT}'
+    environment:
+      - MONGO_URL=mongodb://adminuser1:p4ssword!@chatmongodb:27017/
+      - PORT=${CHAT_PORT}
+      - APP_PORT=${APP_PORT}
+      - DB_NAME=${CHAT_DB_NAME}
+    depends_on:
+      - chatmongodb
   messagebus:
     image: rabbitmq:latest
     container_name: messagebus
@@ -38,18 +71,19 @@ services:
   db-exporter:
     image: bitnami/mongodb-exporter:latest
     container_name: db-exporter
-    environment:
-      - MONGO_URL=mongodb://root:password@mongodb:27017/
     ports:
       - "9216:9216"
       - "17001:17001"
     depends_on:
       - mongodb
-    command: --mongodb.uri=mongodb://root:password@mongodb:27017/
+    command: --mongodb.uri=mongodb://adminuser1:p4ssword!@mongodb:27017/,mongodb://adminuser1:p4ssword!@chatmongodb:27017/ --collect-all --compatible-mode
   prometheus:
-    image: prom/prometheus:latest
+    build:
+      context: ./prometheus
+      args:
+        - APP_PORT=${APP_PORT}
+        - CHAT_PORT=${CHAT_PORT}
     volumes:
-      - ./prometheus:/etc/prometheus
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"

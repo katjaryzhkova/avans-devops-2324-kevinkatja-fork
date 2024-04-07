@@ -1,0 +1,11 @@
+FROM node:18  
+WORKDIR /usr/app
+COPY . .
+RUN npm install
+
+# Default chat port is 3030
+ARG CHAT_PORT=3030
+
+EXPOSE ${CHAT_PORT}
+
+CMD npm start

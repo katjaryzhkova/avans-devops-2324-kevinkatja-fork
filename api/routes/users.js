@@ -13,6 +13,10 @@ router.post('/', function(req, res) {
   db.collection('users').insertOne(req.body)
     .then((user) => res.status(201).json({ "id": user.insertedId }))
     .catch(err => res.status(500).json(err));
-})
+});
+
+router.get('/:user_id', async function(req, res) {
+  res.json(await db.collection('users').findById(req.params.user_id));
+});
 
 module.exports = router;
