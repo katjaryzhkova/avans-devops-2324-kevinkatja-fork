@@ -1,0 +1,11 @@
+FROM node:18  
+WORKDIR /usr/app
+COPY . .
+RUN npm install
+
+# Default app port is 3000
+ARG APP_PORT=3000
+
+EXPOSE ${APP_PORT}
+
+CMD npm start
