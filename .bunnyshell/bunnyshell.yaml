@@ -1,6 +1,14 @@
 kind: Environment
 name: devops
 type: primary
+urlHandle: zchqwz
+environmentVariables:
+    APP_PORT: '3000'
+    CHAT_DB_NAME: chat
+    CHAT_PORT: '3030'
+    DB_NAME: devops
+    EMAIL_PASSWORD: 
+    EMAIL_USERNAME: 
 components:
     -
         kind: Service
@@ -9,6 +17,9 @@ components:
             command:
                 - '--config.file=/config/alertmanager.yml'
                 - '--log.level=debug'
+            environment:
+                EMAIL_PASSWORD: ''
+                EMAIL_USERNAME: ''
             image: 'prom/alertmanager:latest'
             ports:
                 - '9093:9093'
@@ -28,13 +39,17 @@ components:
         name: app
         gitRepo: 'https://github.com/katjaryzhkova/avans-devops-2324-kevinkatja-fork.git'
         gitBranch: main
-        gitApplicationPath: /
+        gitApplicationPath: api
         dockerCompose:
             build:
-                context: .
+                context: ./api
                 dockerfile: dockerfile
+                args:
+                    APP_PORT: '3000'
             environment:
-                MONGO_URL: 'mongodb://root:password@mongodb:27017/'
+                DB_NAME: app
+                MONGO_URL: 'mongodb://adminuser1:p4ssword!@mongodb:27017/'
+                PORT: '3000'
             ports:
                 - '3000:3000'
         hosts:
@@ -43,13 +58,50 @@ components:
                 path: /
                 servicePort: 3000
     -
+        kind: Application
+        name: chat
+        gitRepo: 'https://github.com/katjaryzhkova/avans-devops-2324-kevinkatja-fork.git'
+        gitBranch: main
+        gitApplicationPath: chat
+        dockerCompose:
+            build:
+                context: ./chat
+                dockerfile: dockerfile
+                args:
+                    CHAT_PORT: '3030'
+            environment:
+                APP_PORT: '3000'
+                DB_NAME: chat
+                MONGO_URL: 'mongodb://adminuser1:p4ssword!@chatmongodb:27017/'
+                PORT: '3030'
+            ports:
+                - '3030:3030'
+        hosts:
+            -
+                hostname: 'chat-{{ env.base_domain }}'
+                path: /
+                servicePort: 3030
+    -
+        kind: Database
+        name: chatmongodb
+        dockerCompose:
+            command:
+                - '--auth'
+            environment:
+                MONGO_INITDB_ROOT_PASSWORD: p4ssword!
+                MONGO_INITDB_ROOT_USERNAME: adminuser1
+            image: mongo
+            restart: always
+            ports:
+                - '27017:27017'
+    -
         kind: Database
         name: db-exporter
         dockerCompose:
             command:
-                - '--mongodb.uri='
-            environment:
-                MONGO_URL: 'mongodb://root:password@mongodb:27017/'
+                - '--mongodb.uri=mongodb://adminuser1:p4ssword!@mongodb:27017/,mongodb://adminuser1:p4ssword!@chatmongodb:27017/'
+                - '--collect-all'
+                - '--compatible-mode'
             image: 'bitnami/mongodb-exporter:latest'
             ports:
                 - '9216:9216'
@@ -63,7 +115,7 @@ components:
         dockerCompose:
             build:
                 context: ./grafana
-                dockerfile: Dockerfile
+                dockerfile: dockerfile
             ports:
                 - '5000:3000'
         hosts:
@@ -98,20 +150,26 @@ components:
             command:
                 - '--auth'
             environment:
-                MONGO_INITDB_ROOT_PASSWORD: password
-                MONGO_INITDB_ROOT_USERNAME: root
+                DB_NAME: app
+                MONGO_INITDB_ROOT_PASSWORD: p4ssword!
+                MONGO_INITDB_ROOT_USERNAME: adminuser1
             image: mongo
             restart: always
             ports:
                 - '27017:27017'
     -
-        kind: Service
+        kind: Application
         name: prometheus
+        gitRepo: 'https://github.com/katjaryzhkova/avans-devops-2324-kevinkatja-fork.git'
+        gitBranch: main
+        gitApplicationPath: prometheus
         dockerCompose:
+            build:
+                context: ./prometheus
+                dockerfile: dockerfile
             command:
                 - '--web.enable-lifecycle'
                 - '--config.file=/etc/prometheus/prometheus.yml'
-            image: 'prom/prometheus:latest'
             ports:
                 - '9090:9090'
         hosts:
