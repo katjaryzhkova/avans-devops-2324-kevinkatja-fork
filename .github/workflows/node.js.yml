@@ -16,9 +16,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # defaults: 
-       # run: 
-        # working-directory: ./api
+    defaults: 
+      run: 
+        working-directory: ./api
 
     strategy:
       matrix:
@@ -27,38 +27,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Test API using Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        working_directory: ./api
-    - name: Run API Tests
-      run: |
-        npm ci
-        npm run build --if-present
-        npm test
-        npm run lint
-      working-directory: ./api
-    - name: Jest coverage report for API
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+    - run: npm run lint
+    - name: Jest coverage report
       uses: ArtiomTr/jest-coverage-report-action@v2.2.6
       with:
         working-directory: ./api
-    - uses: actions/checkout@v3
-    - name: Test Chat using Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        working_directory: ./chat
-    - name: Run Chat Tests
-      run: |
-        npm ci
-        npm run build --if-present
-        npm test
-        npm run lint
-      working-directory: ./chat
-    - name: Jest coverage report for Chat
-      uses: ArtiomTr/jest-coverage-report-action@v2.2.6
-      with:
-        working-directory: ./chat
